@@ -93,7 +93,101 @@ After the add-on starts successfully, your REHAU entities will appear in Home As
 
 All entities are automatically discovered via MQTT and will appear within a few minutes of starting the add-on.
 
+## Debugging
+
+### Enabling Debug Mode
+
+To enable detailed logging for troubleshooting:
+
+1. Go to the add-on **Configuration** tab
+2. Set `log_level: "debug"`
+3. Restart the add-on
+4. Check the **Log** tab for detailed output
+
+**⚠️ IMPORTANT - Debug Mode Warning:**
+
+When debug mode is enabled, the add-on will log **detailed information** including:
+- Full MQTT messages
+- HTTP requests and responses
+- Authentication tokens and session data
+- Installation details
+
+**Sensitive data is automatically redacted** in debug logs:
+- ✅ Passwords → `[REDACTED]`
+- ✅ Tokens → First 2 and last 2 characters shown (e.g., `ey...PM`)
+- ✅ Email addresses → Partially masked (e.g., `ma...et`)
+- ✅ Installation addresses → `[REDACTED]`
+- ✅ GPS coordinates → `[REDACTED]`
+
+However, **other personal information may still be visible**:
+- Installation names
+- Zone names
+- Temperature values
+- System configuration
+
+### Sharing Logs Safely
+
+When sharing logs on GitHub issues or public forums:
+
+1. **Always review logs before sharing** - even with redaction enabled
+2. **Check for personal information**:
+   - Installation names (e.g., "John's House")
+   - Zone names (e.g., "Master Bedroom")
+   - Any other identifying information
+3. **Use debug mode only when needed** - switch back to `info` level after troubleshooting
+4. **Copy only relevant sections** - don't share entire log files
+5. **Use code blocks** when pasting logs in GitHub issues:
+   ```
+   ```text
+   [paste your log excerpt here]
+   ```
+   ```
+
+### What to Include in Bug Reports
+
+When reporting issues, please include:
+
+1. **Add-on version** (found in the add-on info page)
+2. **Home Assistant version**
+3. **Relevant log excerpt** (with sensitive data reviewed)
+4. **Steps to reproduce** the issue
+5. **Expected vs actual behavior**
+
+### Common Debug Scenarios
+
+**Connection Issues:**
+```yaml
+log_level: "debug"
+```
+Look for:
+- MQTT connection messages
+- Authentication errors
+- Network timeouts
+
+**Missing Sensors:**
+```yaml
+log_level: "debug"
+```
+Look for:
+- LIVE_EMU and LIVE_DIDO responses
+- Sensor discovery messages
+- MQTT publish confirmations
+
+**Temperature/Control Issues:**
+```yaml
+log_level: "debug"
+```
+Look for:
+- Zone update messages
+- Command messages to REHAU
+- Temperature conversion logs
+
 ## Support
 
 For issues and feature requests, please visit:
 https://github.com/manuxio/rehau-nea-smart-2-home-assistant/issues
+
+**Before opening an issue:**
+1. Enable debug mode and review logs
+2. Check existing issues for similar problems
+3. Include all required information (see "What to Include in Bug Reports" above)

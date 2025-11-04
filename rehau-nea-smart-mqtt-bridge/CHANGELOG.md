@@ -1,5 +1,47 @@
 # Changelog
 
+## [2.1.0] - 2025-11-04
+
+### Added
+- **LIVE Data Sensors** - Real-time system monitoring
+  - Mixed Circuit sensors (setpoint, supply, return temperatures, valve opening, pump state)
+  - Digital I/O sensors (DI0-DI4, DO0-DO5)
+  - All sensors marked as diagnostic entities (hidden by default)
+  - Automatic MQTT discovery in Home Assistant
+- **Periodic LIVE Data Polling**
+  - Automatic refresh every 5 minutes (configurable via `LIVE_DATA_INTERVAL`)
+  - Only polls when connected to REHAU MQTT
+  - Keeps sensor values up-to-date
+- **Enhanced Debug Logging**
+  - Full message dumps when `LOG_LEVEL=debug`
+  - Sensitive data redaction (passwords, tokens, emails, addresses)
+  - Circular reference handling in JSON serialization
+  - Startup warning about potential data exposure in debug mode
+  - HTTP response logging (status, headers, body)
+  - Condensed logging for large data structures
+
+### Fixed
+- MQTT re-subscription on reconnection for both REHAU and Home Assistant
+- HTTP 418 errors by correcting request headers (Origin, Referer, User-Agent)
+- LOG_LEVEL environment variable not being read (dotenv loading order)
+- Circular JSON serialization errors in logger
+- LIVE_DIDO crash when DI/DO arrays are undefined (added safety checks)
+- Installation name in device identifiers (was showing ID instead of name)
+- Temperature conversion for Mixed Circuit sensors (Fahrenheit to Celsius)
+- Reduced log noise (config dumps only at debug level)
+
+### Changed
+- Retained MQTT messages for sensor states (persist across HA restarts)
+- LIVE data request logging changed from info to debug level
+- Better error handling throughout the application
+
+### Security
+- Sensitive data redaction in debug logs
+  - Passwords, tokens, API keys redacted
+  - Email addresses partially masked
+  - Installation addresses and coordinates redacted
+  - User data structure preserved while hiding sensitive fields
+
 ## [2.0.2] - 2025-11-04
 
 ### Fixed
