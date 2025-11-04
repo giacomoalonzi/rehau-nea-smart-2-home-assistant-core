@@ -15,8 +15,10 @@ class RehauMQTTBridge {
   private messageHandlers: MessageHandler[] = [];
   private referentials: ReferentialsMap | null = null;
   private referentialsTimer: NodeJS.Timeout | null = null;
+  private liveDataTimer: NodeJS.Timeout | null = null;
   private rehauSubscriptions: Set<string> = new Set();
   private haSubscriptions: Set<string> = new Set();
+  private installations: string[] = [];
 
   constructor(rehauAuth: RehauAuthPersistent, mqttConfig: MQTTConfig) {
     this.rehauAuth = rehauAuth;
@@ -362,8 +364,50 @@ class RehauMQTTBridge {
     };
     
     const typeName = dataType === 0 ? 'LIVE_DIDO' : 'LIVE_EMU';
-    logger.info(`Requesting ${typeName} data for installation ${installUnique}`);
+    logger.debug(`Requesting ${typeName} data for installation ${installUnique}`);
     this.publishToRehau(topic, message);
+  }
+
+  /**
+   * Start periodic LIVE data polling
+   * @param installUniques - Array of installation unique IDs to poll
+   * @param intervalSeconds - Polling interval in seconds (default: 300 = 5 minutes)
+   */
+  startLiveDataPolling(installUniques: string[], intervalSeconds: number = 300): void {
+    this.installations = installUniques;
+    
+    // Clear existing timer if any
+    if (this.liveDataTimer) {
+      clearInterval(this.liveDataTimer);
+    }
+    
+    // Set up periodic polling
+    this.liveDataTimer = setInterval(() => {
+      if (this.rehauClient?.connected) {
+        this.installations.forEach(installUnique => {
+          // Request LIVE_EMU (mixed circuits)
+          this.requestLiveData(installUnique, 1);
+          
+          // Request LIVE_DIDO (digital I/O) after a short delay
+          setTimeout(() => {
+            this.requestLiveData(installUnique, 0);
+          }, 1000);
+        });
+      }
+    }, intervalSeconds * 1000);
+    
+    logger.info(`LIVE data polling started: every ${intervalSeconds} seconds for ${installUniques.length} installation(s)`);
+  }
+
+  /**
+   * Stop LIVE data polling
+   */
+  stopLiveDataPolling(): void {
+    if (this.liveDataTimer) {
+      clearInterval(this.liveDataTimer);
+      this.liveDataTimer = null;
+      logger.info('LIVE data polling stopped');
+    }
   }
 
   async disconnect(): Promise<void> {
@@ -371,6 +415,10 @@ class RehauMQTTBridge {
     
     if (this.referentialsTimer) {
       clearInterval(this.referentialsTimer);
+    }
+    
+    if (this.liveDataTimer) {
+      clearInterval(this.liveDataTimer);
     }
     
     if (this.rehauClient) {

@@ -975,6 +975,7 @@ class ClimateController {
           unit_of_measurement: '°C',
           device_class: 'temperature',
           state_class: 'measurement',
+          entity_category: 'diagnostic',
           device: {
             identifiers: [`rehau_${installId}`],
             name: `REHAU ${installName}`,
@@ -1002,6 +1003,7 @@ class ClimateController {
           unit_of_measurement: '°C',
           device_class: 'temperature',
           state_class: 'measurement',
+          entity_category: 'diagnostic',
           device: {
             identifiers: [`rehau_${installId}`],
             name: `REHAU ${installName}`,
@@ -1029,6 +1031,7 @@ class ClimateController {
           unit_of_measurement: '°C',
           device_class: 'temperature',
           state_class: 'measurement',
+          entity_category: 'diagnostic',
           device: {
             identifiers: [`rehau_${installId}`],
             name: `REHAU ${installName}`,
@@ -1056,6 +1059,7 @@ class ClimateController {
           unit_of_measurement: '%',
           icon: 'mdi:valve',
           state_class: 'measurement',
+          entity_category: 'diagnostic',
           device: {
             identifiers: [`rehau_${installId}`],
             name: `REHAU ${installName}`,
