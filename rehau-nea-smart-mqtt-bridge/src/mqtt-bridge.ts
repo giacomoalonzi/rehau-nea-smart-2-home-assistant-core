@@ -1,6 +1,6 @@
 import mqtt, { MqttClient, IClientOptions, IClientPublishOptions } from 'mqtt';
 import LZString from 'lz-string';
-import logger from './logger';
+import logger, { debugDump } from './logger';
 import RehauAuthPersistent from './rehau-auth';
 import { MQTTConfig, RehauMQTTMessage, ReferentialEntry, ReferentialsMap, HACommand } from './types';
 
@@ -182,6 +182,9 @@ class RehauMQTTBridge {
       const payload: RehauMQTTMessage = JSON.parse(message.toString());
       logger.debug('REHAU message received:', { topic, type: payload.type });
       
+      // Full message dump in debug mode (with redacted sensitive data)
+      debugDump(`REHAU MQTT Message [${topic}]`, payload);
+      
       // Notify all registered handlers
       this.messageHandlers.forEach(handler => {
         try {
@@ -199,6 +202,9 @@ class RehauMQTTBridge {
     try {
       const payload = message.toString();
       logger.debug('Home Assistant message received:', { topic, payload });
+      
+      // Full message dump in debug mode
+      debugDump(`Home Assistant MQTT Message [${topic}]`, { topic, payload });
       
       // Handle command messages from Home Assistant
       if (topic.includes('_command')) {

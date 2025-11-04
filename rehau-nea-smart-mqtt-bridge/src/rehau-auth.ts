@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from 'axios';
 import crypto from 'crypto';
-import logger from './logger';
+import logger, { debugDump } from './logger';
 import { RehauTokenResponse, RehauInstallation } from './types';
 
 interface InstallInfo {
@@ -254,6 +254,8 @@ class RehauAuthPersistent {
         { headers }
       );
 
+      debugDump('getUserData API Response', response.data);
+
       if (response.data.success) {
         const user = response.data.data.user;
         this.installs = user.installs.map(install => ({
@@ -371,11 +373,12 @@ class RehauAuthPersistent {
       headers: {
         'Authorization': this.accessToken!,
         'Accept': 'application/json',
-        'Origin': 'http://android.neasmart.de',
-        'Referer': 'http://android.neasmart.de/',
-        'User-Agent': 'Mozilla/5.0 (Linux; Android 10; SM-G973F) AppleWebKit/537.36'
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0'
       }
     });
+
+    debugDump('getInstallationData API Response', response.data);
 
     if (response.data && (response.data.success || response.data.data)) {
       const user = response.data.data?.user || response.data.user;
