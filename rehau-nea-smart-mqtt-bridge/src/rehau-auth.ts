@@ -2,21 +2,12 @@ import axios, { AxiosResponse } from 'axios';
 import crypto from 'crypto';
 import logger, { debugDump } from './logger';
 import { RehauTokenResponse, RehauInstallation } from './types';
+import { UserDataParser, InstallationDataParser } from './parsers';
 
 interface InstallInfo {
   unique: string;
   name: string;
   _id: string;
-}
-
-interface UserDataResponse {
-  success: boolean;
-  data: {
-    user: {
-      _id: string;
-      installs: InstallInfo[];
-    };
-  };
 }
 
 class RehauAuthPersistent {
@@ -249,7 +240,7 @@ class RehauAuthPersistent {
         'Accept': 'application/json, text/plain, */*'
       };
 
-      const response: AxiosResponse<UserDataResponse> = await axios.get(
+      const response = await axios.get(
         `https://api.nea2aws.aws.rehau.cloud/v2/users/${this.email}/getUserData`,
         { headers }
       );
@@ -260,15 +251,18 @@ class RehauAuthPersistent {
       
       debugDump('getUserData API Response', response.data);
 
-      if (response.data.success) {
-        const user = response.data.data.user;
-        this.installs = user.installs.map(install => ({
-          unique: install.unique,
-          name: install.name,
-          _id: install._id
-        }));
-        logger.info(`Found ${this.installs.length} installation(s)`);
-      }
+      // Use parser to extract user data
+      const parser = new UserDataParser();
+      const parsed = parser.parse(response.data);
+      
+      this.installs = parsed.installations.map(install => ({
+        unique: install.unique,
+        name: install.name,
+        _id: install.id
+      }));
+      
+      logger.info(`Found ${this.installs.length} installation(s)`);
+      logger.debug('Parsed user data:', parser.getSummary(parsed));
     } catch (error: any) {
       if (error.response) {
         logger.error(`getUserData HTTP Error: status=${error.response.status}`);
@@ -397,6 +391,13 @@ class RehauAuthPersistent {
       // Use condensed format for large installation data
       debugDump('getInstallationData API Response', response.data, true);
 
+      // Use parser to extract installation data
+      const parser = new InstallationDataParser();
+      const parsed = parser.parse(response.data, install.unique);
+      
+      logger.debug('Parsed installation data:', parser.getSummary(parsed));
+
+      // Find the raw installation from response for backward compatibility
       if (response.data && (response.data.success || response.data.data)) {
         const user = response.data.data?.user || response.data.user;
         if (user && user.installs && user.installs.length > 0) {

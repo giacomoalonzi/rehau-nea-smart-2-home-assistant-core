@@ -182,6 +182,24 @@ Look for:
 - Command messages to REHAU
 - Temperature conversion logs
 
+## Developer Tools
+
+### API Response Parsers
+
+This project includes standalone parsers for REHAU API responses. Use them to analyze API dumps for debugging and support:
+
+```bash
+# Parse user data from JSON file
+npm run parseUserData -- user-data.json
+npm run parseUserData -- user-data.json --summary
+
+# Parse installation data from JSON file
+npm run parseInstallationData -- installation-data.json
+npm run parseInstallationData -- installation-data.json --summary
+```
+
+See [src/parsers/README.md](src/parsers/README.md) for complete documentation.
+
 ## Support
 
 For issues and feature requests, please visit:
