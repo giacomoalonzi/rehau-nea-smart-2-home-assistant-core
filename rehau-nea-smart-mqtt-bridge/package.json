@@ -11,7 +11,9 @@
     "test": "ts-node test-local.ts",
     "test:watch": "nodemon --exec ts-node test-local.ts",
     "test:auth": "ts-node test-auth-only.ts",
-    "test:rehau": "ts-node test-rehau-only.ts"
+    "test:rehau": "ts-node test-rehau-only.ts",
+    "parseUserData": "ts-node src/parsers/cli-user-data.ts",
+    "parseInstallationData": "ts-node src/parsers/cli-installation-data.ts"
   },
   "keywords": [
     "rehau",
