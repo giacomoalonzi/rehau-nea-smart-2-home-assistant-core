@@ -1,0 +1,41 @@
+name: REHAU NEA SMART 2.0 MQTT Bridge
+version: "2.0.1"
+slug: rehau_nea_smart_mqtt
+description: TypeScript-based MQTT bridge for REHAU NEA SMART 2.0 heating systems with configurable intervals
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+  - i386
+init: false
+startup: application
+boot: auto
+ports:
+  3000/tcp: 3000
+ports_description:
+  3000/tcp: REST API port
+options:
+  rehau_email: ""
+  rehau_password: ""
+  mqtt_host: "core-mosquitto"
+  mqtt_port: 1883
+  mqtt_user: ""
+  mqtt_password: ""
+  api_port: 3000
+  log_level: "info"
+  zone_reload_interval: 300
+  token_refresh_interval: 21600
+  referentials_reload_interval: 86400
+schema:
+  rehau_email: str
+  rehau_password: password
+  mqtt_host: str
+  mqtt_port: port
+  mqtt_user: str?
+  mqtt_password: password?
+  api_port: port
+  log_level: list(debug|info|warn|error)
+  zone_reload_interval: int(30,3600)?
+  token_refresh_interval: int(1800,86400)?
+  referentials_reload_interval: int(3600,604800)?

@@ -1,0 +1,202 @@
+// REHAU API Types
+export interface RehauTokenResponse {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: string;
+}
+
+export interface RehauChannel {
+  _id: string;
+  index_config: number;
+  ca_code: number;
+  channel_zone: number;
+  temp_zone?: number;
+  humidity?: number;
+  mode_used?: number;
+  setpoint_used?: number;
+  setpoint_h_normal?: number;
+  setpoint_h_reduced?: number;
+  setpoint_h_standby?: number;
+  setpoint_c_normal?: number;
+  setpoint_c_reduced?: number;
+  demand?: number;
+  dewpoint?: number;
+  openWindow?: boolean;
+  [key: string]: unknown;
+}
+
+export interface RehauZone {
+  _id: string;
+  number: number;
+  name: string;
+  channels: RehauChannel[];
+}
+
+export interface RehauGroup {
+  _id: string;
+  name: string;
+  zones: RehauZone[];
+}
+
+export interface RehauInstallation {
+  _id: string;
+  unique: string;
+  name: string;
+  address?: string;
+  version?: string;
+  connectionState?: boolean;
+  timezone?: string;
+  outside_temp?: number;
+  outsideTempFiltered?: number;
+  coolingConditions?: number;
+  groups: RehauGroup[];
+  user?: {
+    heatcool_auto_01?: {
+      heating?: boolean;
+      cooling?: boolean;
+      manual?: boolean;
+    };
+  };
+}
+
+export interface RehauInstallationsResponse {
+  success: boolean;
+  data: RehauInstallation[];
+}
+
+// MQTT Types
+export interface MQTTConfig {
+  host: string;
+  port: number;
+  username?: string;
+  password?: string;
+}
+
+export interface RehauMQTTMessage {
+  type: string;
+  success?: boolean;
+  data?: unknown;
+  zones?: RehauZone[];
+  [key: string]: unknown;
+}
+
+export interface RehauChannelUpdateMessage {
+  type: 'channel_update';
+  success: boolean;
+  data: {
+    channel: string;
+    unique: string;
+    data: RehauChannel;
+  };
+}
+
+// Home Assistant Types
+export interface HACommand {
+  type: 'ha_command';
+  installId: string;
+  zoneNumber: number;
+  commandType: 'mode' | 'preset' | 'temperature';
+  payload: string;
+}
+
+export interface ClimateState {
+  id: string;
+  installId: string;
+  zoneId: string;
+  zoneName: string;
+  zoneNumber: number;
+  channelNumber?: number;
+  installName: string;
+  installationMode: 'heat' | 'cool';
+  currentTemperature: number | null;
+  targetTemperature: number | null;
+  humidity: number | null;
+  mode: 'off' | 'heat' | 'cool';
+  preset: 'comfort' | 'away' | null;
+  available: boolean;
+}
+
+export interface ZoneInfo {
+  zoneId: string;
+  zoneName: string;
+  zoneNumber: number;
+  channelNumber?: number;
+  installName: string;
+}
+
+// MQTT Discovery Config Types
+export interface HADeviceConfig {
+  identifiers: string[];
+  name: string;
+  manufacturer: string;
+  model: string;
+  sw_version: string;
+}
+
+export interface HAClimateDiscoveryConfig {
+  name: string;
+  unique_id: string;
+  device: HADeviceConfig;
+  current_temperature_topic: string;
+  temperature_state_topic: string;
+  temperature_command_topic: string;
+  current_humidity_topic: string;
+  mode_state_topic: string;
+  mode_command_topic: string;
+  modes: string[];
+  preset_mode_state_topic: string;
+  preset_mode_command_topic: string;
+  preset_modes: string[];
+  availability_topic: string;
+  payload_available: string;
+  payload_not_available: string;
+  temperature_unit: string;
+  temp_step: number;
+  min_temp: number;
+  max_temp: number;
+  precision?: number;
+  optimistic?: boolean;
+}
+
+export interface HASensorDiscoveryConfig {
+  name: string;
+  unique_id: string;
+  device: HADeviceConfig;
+  state_topic: string;
+  device_class: string;
+  unit_of_measurement: string;
+  value_template: string;
+  availability_topic: string;
+  payload_available: string;
+  payload_not_available: string;
+}
+
+// Referentials Types
+export interface ReferentialEntry {
+  index: string;
+  value: string;
+}
+
+export interface ReferentialsMap {
+  [key: string]: string;
+}
+
+// REHAU Command Types
+export interface RehauCommandData {
+  [key: string]: number | string;
+}
+
+export interface RehauCommand {
+  "11": string; // type
+  "12": RehauCommandData; // data
+  "35"?: number; // controller/channel
+  "36"?: number; // zone
+}
+
+// Logger Types
+export type LogLevel = 'error' | 'warn' | 'info' | 'debug';
+
+export interface LoggerConfig {
+  level: LogLevel;
+}
