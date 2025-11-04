@@ -226,13 +226,52 @@ class RehauMQTTBridge {
         logger.info(`📨 REHAU: channel_update for channel ${channelId} (install: ${installId?.substring(0, 8)}...)`);
         if (channelData) {
           const updates: string[] = [];
-          if (channelData.temp_zone !== undefined) updates.push(`temp=${(channelData.temp_zone / 10 - 32) / 1.8}°C`);
-          if (channelData.humidity !== undefined) updates.push(`humidity=${channelData.humidity}%`);
-          if (channelData.mode_used !== undefined) updates.push(`mode=${channelData.mode_used}`);
-          if (channelData.cc_config_bits?.ring_activation !== undefined) updates.push(`ring=${channelData.cc_config_bits.ring_activation}`);
-          if (channelData.cc_config_bits?.lock !== undefined) updates.push(`lock=${channelData.cc_config_bits.lock}`);
+          
+          // Temperature
+          if (channelData.temp_zone !== undefined && channelData.temp_zone !== null) {
+            const tempC = Math.round(((channelData.temp_zone / 10 - 32) / 1.8) * 10) / 10;
+            updates.push(`temp=${tempC}°C`);
+          }
+          
+          // Humidity
+          if (channelData.humidity !== undefined && channelData.humidity !== null) {
+            updates.push(`humidity=${channelData.humidity}%`);
+          }
+          
+          // Setpoints
+          if (channelData.setpoint_h_normal !== undefined && channelData.setpoint_h_normal !== null) {
+            const setpointC = Math.round(((channelData.setpoint_h_normal / 10 - 32) / 1.8) * 10) / 10;
+            updates.push(`setpoint_heat=${setpointC}°C`);
+          }
+          if (channelData.setpoint_c_normal !== undefined && channelData.setpoint_c_normal !== null) {
+            const setpointC = Math.round(((channelData.setpoint_c_normal / 10 - 32) / 1.8) * 10) / 10;
+            updates.push(`setpoint_cool=${setpointC}°C`);
+          }
+          
+          // Mode
+          if (channelData.mode_used !== undefined && channelData.mode_used !== null) {
+            const modeNames = ['comfort', 'away', 'standby', 'off'];
+            const modeName = modeNames[channelData.mode_used] || channelData.mode_used;
+            updates.push(`mode=${modeName}`);
+          }
+          
+          // Ring light and lock
+          if (channelData.cc_config_bits?.ring_activation !== undefined) {
+            updates.push(`ring_light=${channelData.cc_config_bits.ring_activation ? 'ON' : 'OFF'}`);
+          }
+          if (channelData.cc_config_bits?.lock !== undefined) {
+            updates.push(`lock=${channelData.cc_config_bits.lock ? 'LOCKED' : 'UNLOCKED'}`);
+          }
+          
+          // Demand
+          if (channelData.demand !== undefined && channelData.demand !== null) {
+            updates.push(`demand=${channelData.demand}%`);
+          }
+          
           if (updates.length > 0) {
             logger.info(`   Updates: ${updates.join(', ')}`);
+          } else {
+            logger.info(`   No recognized updates in message`);
           }
         }
       } else if (payload.type === 'realtime' || payload.type === 'realtime.update') {
