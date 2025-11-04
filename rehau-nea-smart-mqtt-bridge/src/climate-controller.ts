@@ -304,16 +304,27 @@ class ClimateController {
 
   private publishZoneSensors(zone: ExtendedZoneInfo, installId: string, installName: string): void {
     const zoneName = zone.zoneName;
-    const zoneNumber = zone.zoneNumber;
+    const zoneId = zone.zoneId;
+    const groupName = zone.groupName;
     
-    // Sanitize names for sensor IDs (lowercase, replace spaces with underscores)
-    const installNameSanitized = installName.toLowerCase().replace(/\s+/g, '_');
+    // Sanitize names for IDs (lowercase, replace spaces with underscores)
+    const groupNameSanitized = groupName.toLowerCase().replace(/\s+/g, '_');
     const zoneNameSanitized = zoneName.toLowerCase().replace(/\s+/g, '_');
+    
+    // Build object_id and display name based on USE_GROUP_IN_NAMES
+    const objectIdBase = USE_GROUP_IN_NAMES && groupName
+      ? `rehau_${groupNameSanitized}_${zoneNameSanitized}`
+      : `rehau_${zoneNameSanitized}`;
+    
+    const displayName = USE_GROUP_IN_NAMES && groupName
+      ? `${groupName} - ${zoneName}`
+      : zoneName;
     
     // Temperature sensor
     const tempConfig = {
-      name: `${zoneName} Temperature`,
-      unique_id: `rehau_${installNameSanitized}_${zoneNameSanitized}_temperature`,
+      name: `${displayName} Temperature`,
+      object_id: `${objectIdBase}_temperature`,  // Controls entity_id: sensor.rehau_group_zone_temperature
+      unique_id: `rehau_${zoneId}_temperature`,
       device: {
         identifiers: [`rehau_${installId}`],
         name: `REHAU ${installName}`,
@@ -321,19 +332,20 @@ class ClimateController {
         model: 'NEA SMART 2.0',
         sw_version: '1.0.0'
       },
-      state_topic: `homeassistant/sensor/rehau_${installId}_zone_${zoneNumber}_temperature/state`,
+      state_topic: `homeassistant/sensor/rehau_${zoneId}_temperature/state`,
       device_class: 'temperature',
       unit_of_measurement: '°C',
       value_template: '{{ value }}',
-      availability_topic: `homeassistant/sensor/rehau_${installId}_zone_${zoneNumber}_temperature/availability`,
+      availability_topic: `homeassistant/sensor/rehau_${zoneId}_temperature/availability`,
       payload_available: 'online',
       payload_not_available: 'offline'
     };
     
     // Humidity sensor
     const humidityConfig = {
-      name: `${zoneName} Humidity`,
-      unique_id: `rehau_${installNameSanitized}_${zoneNameSanitized}_humidity`,
+      name: `${displayName} Humidity`,
+      object_id: `${objectIdBase}_humidity`,  // Controls entity_id: sensor.rehau_group_zone_humidity
+      unique_id: `rehau_${zoneId}_humidity`,
       device: {
         identifiers: [`rehau_${installId}`],
         name: `REHAU ${installName}`,
@@ -341,37 +353,37 @@ class ClimateController {
         model: 'NEA SMART 2.0',
         sw_version: '1.0.0'
       },
-      state_topic: `homeassistant/sensor/rehau_${installId}_zone_${zoneNumber}_humidity/state`,
+      state_topic: `homeassistant/sensor/rehau_${zoneId}_humidity/state`,
       device_class: 'humidity',
       unit_of_measurement: '%',
       value_template: '{{ value }}',
-      availability_topic: `homeassistant/sensor/rehau_${installId}_zone_${zoneNumber}_humidity/availability`,
+      availability_topic: `homeassistant/sensor/rehau_${zoneId}_humidity/availability`,
       payload_available: 'online',
       payload_not_available: 'offline'
     };
     
-    // Publish temperature sensor discovery
+    // Publish temperature sensor discovery (using zone ID in topic)
     this.mqttBridge.publishToHomeAssistant(
-      `homeassistant/sensor/rehau_${installNameSanitized}_${zoneNameSanitized}_temperature/config`,
+      `homeassistant/sensor/rehau_${zoneId}_temperature/config`,
       tempConfig,
       { retain: true }
     );
     
-    // Publish humidity sensor discovery
+    // Publish humidity sensor discovery (using zone ID in topic)
     this.mqttBridge.publishToHomeAssistant(
-      `homeassistant/sensor/rehau_${installNameSanitized}_${zoneNameSanitized}_humidity/config`,
+      `homeassistant/sensor/rehau_${zoneId}_humidity/config`,
       humidityConfig,
       { retain: true }
     );
     
     // Publish availability
     this.mqttBridge.publishToHomeAssistant(
-      `homeassistant/sensor/rehau_${installId}_zone_${zoneNumber}_temperature/availability`,
+      `homeassistant/sensor/rehau_${zoneId}_temperature/availability`,
       'online',
       { retain: true }
     );
     this.mqttBridge.publishToHomeAssistant(
-      `homeassistant/sensor/rehau_${installId}_zone_${zoneNumber}_humidity/availability`,
+      `homeassistant/sensor/rehau_${zoneId}_humidity/availability`,
       'online',
       { retain: true }
     );
@@ -684,19 +696,29 @@ class ClimateController {
     zones.forEach((zone, idx) => {
       const isLast = idx === zones.length - 1;
       const prefix = isLast ? '   └─' : '   ├─';
-      const sanitizedInstall = installName.toLowerCase().replace(/\s+/g, '_');
-      const sanitizedZone = zone.zoneName.toLowerCase().replace(/\s+/g, '_');
+      const groupNameSanitized = zone.groupName.toLowerCase().replace(/\s+/g, '_');
+      const zoneNameSanitized = zone.zoneName.toLowerCase().replace(/\s+/g, '_');
+      
+      const displayName = USE_GROUP_IN_NAMES && zone.groupName
+        ? `${zone.groupName} - ${zone.zoneName}`
+        : zone.zoneName;
+      
+      const objectIdBase = USE_GROUP_IN_NAMES && zone.groupName
+        ? `rehau_${groupNameSanitized}_${zoneNameSanitized}`
+        : `rehau_${zoneNameSanitized}`;
       
       // Temperature sensor
-      logger.info(`${prefix} rehau_${sanitizedInstall}_${sanitizedZone}_temperature/`);
-      logger.info(`${isLast ? '      ' : '   │  '}├─ config                               → "${zone.zoneName} Temperature"`);
+      logger.info(`${prefix} rehau_${zone.state.zoneId}_temperature/`);
+      logger.info(`${isLast ? '      ' : '   │  '}├─ config                               → "${displayName} Temperature"`);
+      logger.info(`${isLast ? '      ' : '   │  '}├─ object_id                            → "${objectIdBase}_temperature"`);
       logger.info(`${isLast ? '      ' : '   │  '}├─ availability                         → "online"`);
       logger.info(`${isLast ? '      ' : '   │  '}└─ state                                → ${zone.state.currentTemperature?.toFixed(1) ?? 'N/A'}°C`);
       
       // Humidity sensor
       logger.info(`${isLast ? '   ' : '   │'}`);
-      logger.info(`${isLast ? '   └─' : '   ├─'} rehau_${sanitizedInstall}_${sanitizedZone}_humidity/`);
-      logger.info(`${isLast ? '      ' : '   │  '}├─ config                               → "${zone.zoneName} Humidity"`);
+      logger.info(`${isLast ? '   └─' : '   ├─'} rehau_${zone.state.zoneId}_humidity/`);
+      logger.info(`${isLast ? '      ' : '   │  '}├─ config                               → "${displayName} Humidity"`);
+      logger.info(`${isLast ? '      ' : '   │  '}├─ object_id                            → "${objectIdBase}_humidity"`);
       logger.info(`${isLast ? '      ' : '   │  '}├─ availability                         → "online"`);
       logger.info(`${isLast ? '      ' : '   │  '}└─ state                                → ${zone.state.humidity ?? 'N/A'}%`);
       
@@ -921,6 +943,9 @@ class ClimateController {
   }
 
   private publishCurrentTemperature(zoneKey: string, temperature: number): void {
+    const state = this.installations.get(zoneKey);
+    if (!state) return;
+    
     // Publish to climate entity
     this.mqttBridge.publishToHomeAssistant(
       `homeassistant/climate/rehau_${zoneKey}/current_temperature`,
@@ -928,9 +953,9 @@ class ClimateController {
       { retain: true }
     );
     
-    // Also publish to separate temperature sensor
+    // Also publish to separate temperature sensor (using zone ID)
     this.mqttBridge.publishToHomeAssistant(
-      `homeassistant/sensor/rehau_${zoneKey}_temperature/state`,
+      `homeassistant/sensor/rehau_${state.zoneId}_temperature/state`,
       temperature.toString(),
       { retain: true }
     );
@@ -955,6 +980,9 @@ class ClimateController {
   // publishAction removed - action state not used
 
   private publishHumidity(zoneKey: string, humidity: number): void {
+    const state = this.installations.get(zoneKey);
+    if (!state) return;
+    
     // Publish to climate entity
     this.mqttBridge.publishToHomeAssistant(
       `homeassistant/climate/rehau_${zoneKey}/current_humidity`,
@@ -962,9 +990,9 @@ class ClimateController {
       { retain: true }
     );
     
-    // Also publish to separate humidity sensor
+    // Also publish to separate humidity sensor (using zone ID)
     this.mqttBridge.publishToHomeAssistant(
-      `homeassistant/sensor/rehau_${zoneKey}_humidity/state`,
+      `homeassistant/sensor/rehau_${state.zoneId}_humidity/state`,
       humidity.toString(),
       { retain: true }
     );
