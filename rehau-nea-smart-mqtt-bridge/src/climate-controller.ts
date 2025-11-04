@@ -22,10 +22,12 @@ interface ExtendedZoneInfo extends ZoneInfo {
 class ClimateController {
   private mqttBridge: RehauMQTTBridge;
   private installations: Map<string, ClimateState>;
+  private installationNames: Map<string, string>; // Map installId -> installName
 
   constructor(mqttBridge: RehauMQTTBridge, _rehauApi: RehauAuthPersistent) {
     this.mqttBridge = mqttBridge;
     this.installations = new Map<string, ClimateState>();
+    this.installationNames = new Map<string, string>();
     
     // Listen to REHAU messages and HA commands
     this.mqttBridge.onMessage((topicOrCommand, payload?) => {
@@ -50,6 +52,9 @@ class ClimateController {
   initializeInstallation(install: RehauInstallation): void {
     const installId = install.unique;
     const installName = install.name;
+    
+    // Store installation name for later use
+    this.installationNames.set(installId, installName);
     
     // Get zones from groups (not controllers)
     const zones: ExtendedZoneInfo[] = [];
@@ -920,9 +925,10 @@ class ClimateController {
    */
   private handleLiveEMU(data: LiveEMUData): void {
     const installId = data.data.unique;
+    const installName = this.installationNames.get(installId) || installId;
     const circuits = data.data.data;
     
-    logger.info(`Processing LIVE_EMU data for installation ${installId}`);
+    logger.info(`Processing LIVE_EMU data for installation ${installName}`);
     
     Object.entries(circuits).forEach(([mcKey, mcData]) => {
       // Skip if circuit is not present (supply temp = 32767 indicates not present)
@@ -946,7 +952,7 @@ class ClimateController {
           payload_off: 'OFF',
           device: {
             identifiers: [`rehau_${installId}`],
-            name: `REHAU ${installId}`,
+            name: `REHAU ${installName}`,
             manufacturer: 'REHAU',
             model: 'NEA SMART 2.0'
           }
@@ -969,7 +975,7 @@ class ClimateController {
           state_class: 'measurement',
           device: {
             identifiers: [`rehau_${installId}`],
-            name: `REHAU ${installId}`,
+            name: `REHAU ${installName}`,
             manufacturer: 'REHAU',
             model: 'NEA SMART 2.0'
           }
@@ -992,7 +998,7 @@ class ClimateController {
           state_class: 'measurement',
           device: {
             identifiers: [`rehau_${installId}`],
-            name: `REHAU ${installId}`,
+            name: `REHAU ${installName}`,
             manufacturer: 'REHAU',
             model: 'NEA SMART 2.0'
           }
@@ -1015,7 +1021,7 @@ class ClimateController {
           state_class: 'measurement',
           device: {
             identifiers: [`rehau_${installId}`],
-            name: `REHAU ${installId}`,
+            name: `REHAU ${installName}`,
             manufacturer: 'REHAU',
             model: 'NEA SMART 2.0'
           }
@@ -1038,7 +1044,7 @@ class ClimateController {
           state_class: 'measurement',
           device: {
             identifiers: [`rehau_${installId}`],
-            name: `REHAU ${installId}`,
+            name: `REHAU ${installName}`,
             manufacturer: 'REHAU',
             model: 'NEA SMART 2.0'
           }
@@ -1058,9 +1064,10 @@ class ClimateController {
    */
   private handleLiveDIDO(data: LiveDIDOData): void {
     const installId = data.data.unique;
+    const installName = this.installationNames.get(installId) || installId;
     const controllers = data.data.data;
     
-    logger.info(`Processing LIVE_DIDO data for installation ${installId}`);
+    logger.info(`Processing LIVE_DIDO data for installation ${installName}`);
     
     Object.entries(controllers).forEach(([controllerKey, controllerData]) => {
       const controllerNumber = controllerKey.replace(/\D/g, '');
@@ -1079,7 +1086,7 @@ class ClimateController {
             payload_off: 'OFF',
             device: {
               identifiers: [`rehau_${installId}`],
-              name: `REHAU ${installId}`,
+              name: `REHAU ${installName}`,
               manufacturer: 'REHAU',
               model: 'NEA SMART 2.0'
             }
@@ -1105,7 +1112,7 @@ class ClimateController {
             payload_off: 'OFF',
             device: {
               identifiers: [`rehau_${installId}`],
-              name: `REHAU ${installId}`,
+              name: `REHAU ${installName}`,
               manufacturer: 'REHAU',
               model: 'NEA SMART 2.0'
             }
