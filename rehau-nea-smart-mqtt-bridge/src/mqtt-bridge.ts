@@ -217,16 +217,38 @@ class RehauMQTTBridge {
   private handleRehauMessage(topic: string, message: Buffer): void {
     try {
       const payload: RehauMQTTMessage = JSON.parse(message.toString());
-      logger.debug('REHAU message received:', { topic, type: payload.type });
       
-      // Check for LIVE data responses
-      if (payload.type === 'LIVE_EMU' || payload.type === 'LIVE_DIDO') {
-        logger.info(`Received ${payload.type} data`);
-        debugDump(`${payload.type} Response`, payload, true);
+      // Log essential information about the message
+      if (payload.type === 'channel_update') {
+        const channelData = (payload as any).data?.data;
+        const channelId = (payload as any).data?.channel;
+        const installId = (payload as any).data?.unique;
+        logger.info(`📨 REHAU: channel_update for channel ${channelId} (install: ${installId?.substring(0, 8)}...)`);
+        if (channelData) {
+          const updates: string[] = [];
+          if (channelData.temp_zone !== undefined) updates.push(`temp=${(channelData.temp_zone / 10 - 32) / 1.8}°C`);
+          if (channelData.humidity !== undefined) updates.push(`humidity=${channelData.humidity}%`);
+          if (channelData.mode_used !== undefined) updates.push(`mode=${channelData.mode_used}`);
+          if (channelData.cc_config_bits?.ring_activation !== undefined) updates.push(`ring=${channelData.cc_config_bits.ring_activation}`);
+          if (channelData.cc_config_bits?.lock !== undefined) updates.push(`lock=${channelData.cc_config_bits.lock}`);
+          if (updates.length > 0) {
+            logger.info(`   Updates: ${updates.join(', ')}`);
+          }
+        }
+      } else if (payload.type === 'realtime' || payload.type === 'realtime.update') {
+        const zones = (payload as any).zones;
+        logger.info(`📨 REHAU: ${payload.type} with ${zones?.length || 0} zone(s)`);
+      } else if (payload.type === 'live_data') {
+        const dataType = (payload as any).data?.type;
+        logger.info(`📨 REHAU: live_data (${dataType})`);
+      } else if (payload.type === 'LIVE_EMU' || payload.type === 'LIVE_DIDO') {
+        logger.info(`📨 REHAU: ${payload.type} data received`);
       } else {
-        // Full message dump in debug mode (with redacted sensitive data)
-        debugDump(`REHAU MQTT Message [${topic}]`, payload);
+        logger.info(`📨 REHAU: ${payload.type} message on ${topic}`);
       }
+      
+      // Full message dump in debug mode (with redacted sensitive data)
+      debugDump(`REHAU MQTT Message [${topic}]`, payload);
       
       // Notify all registered handlers
       this.messageHandlers.forEach(handler => {
