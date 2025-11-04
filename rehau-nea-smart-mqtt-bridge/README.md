@@ -101,23 +101,23 @@ This add-on creates multiple entity types in Home Assistant for comprehensive co
 
 **With `USE_GROUP_IN_NAMES=false` (Default):**
 ```
-climate.rehau_cappelleri_atilio_salone
-sensor.rehau_atilio_salone_temperature
-sensor.rehau_atilio_salone_humidity
-light.rehau_atilio_salone_ring_light
-switch.rehau_atilio_salone_lock
+climate.rehau_domodreams_firstfloor_livingroom
+sensor.rehau_firstfloor_livingroom_temperature
+sensor.rehau_firstfloor_livingroom_humidity
+light.rehau_firstfloor_livingroom_ring_light
+switch.rehau_firstfloor_livingroom_lock
 ```
-**Display Names:** "Salone", "Salone Temperature", "Salone Humidity", etc.
+**Display Names:** "Living Room", "Living Room Temperature", "Living Room Humidity", etc.
 
 **With `USE_GROUP_IN_NAMES=true`:**
 ```
-climate.rehau_cappelleri_atilio_salone
-sensor.rehau_atilio_salone_temperature
-sensor.rehau_atilio_salone_humidity
-light.rehau_atilio_salone_ring_light
-switch.rehau_atilio_salone_lock
+climate.rehau_domodreams_firstfloor_livingroom
+sensor.rehau_firstfloor_livingroom_temperature
+sensor.rehau_firstfloor_livingroom_humidity
+light.rehau_firstfloor_livingroom_ring_light
+switch.rehau_firstfloor_livingroom_lock
 ```
-**Display Names:** "Atilio Salone", "Atilio - Salone Temperature", "Atilio - Salone Humidity", etc.
+**Display Names:** "First Floor Living Room", "First Floor - Living Room Temperature", "First Floor - Living Room Humidity", etc.
 
 ### Climate Entity Controls
 
@@ -145,9 +145,9 @@ The climate entity provides:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `<install>` | Installation name (sanitized) | `cappelleri` |
-| `<group>` | Group name (sanitized) | `atilio` |
-| `<zone>` | Zone name (sanitized) | `salone` |
+| `<install>` | Installation name (sanitized) | `domodreams` |
+| `<group>` | Group name (sanitized) | `firstfloor` |
+| `<zone>` | Zone name (sanitized) | `livingroom` |
 | `<installid>` | Installation unique ID | `78602d11303856504e3225ee27165454` |
 
 **Note:** Sanitized names are lowercase with spaces replaced by underscores.

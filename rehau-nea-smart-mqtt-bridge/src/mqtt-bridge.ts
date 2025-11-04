@@ -244,14 +244,13 @@ class RehauMQTTBridge {
   private handleHomeAssistantMessage(topic: string, message: Buffer): void {
     try {
       const payload = message.toString();
-      logger.debug('Home Assistant message received:', { topic, payload });
+      logger.debug(`HA MQTT message received: topic=${topic}, payload=${payload}`);
       
-      // Full message dump in debug mode
-      debugDump(`Home Assistant MQTT Message [${topic}]`, { topic, payload });
-      
-      // Handle command messages from Home Assistant
-      if (topic.includes('_command')) {
+      // Check if this is a command topic
+      if (topic.includes('_command') || topic.includes('/command')) {
         this.handleHomeAssistantCommand(topic, payload);
+      } else {
+        logger.debug(`Ignoring non-command topic: ${topic}`);
       }
     } catch (error) {
       logger.error('Failed to handle Home Assistant message:', (error as Error).message, (error as Error).stack);
@@ -340,15 +339,17 @@ class RehauMQTTBridge {
   }
 
   subscribeToHomeAssistant(topic: string): void {
+    // Always add to subscription set for reconnection
+    this.haSubscriptions.add(topic);
+    
     if (!this.haClient || !this.haClient.connected) {
-      logger.warn('Home Assistant MQTT not connected, cannot subscribe');
+      logger.warn(`Home Assistant MQTT not connected yet, queued subscription: ${topic}`);
       return;
     }
     
     this.haClient.subscribe(topic, (err) => {
       if (!err) {
-        logger.debug(`Subscribed to HA topic: ${topic}`);
-        this.haSubscriptions.add(topic);
+        logger.info(`Subscribed to HA command topic: ${topic}`);
       } else {
         logger.error(`Failed to subscribe to ${topic}:`, err);
       }
