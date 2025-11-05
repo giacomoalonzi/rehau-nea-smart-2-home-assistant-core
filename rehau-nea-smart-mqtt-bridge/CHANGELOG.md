@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.2] - 2025-11-05
+
+### Improved
+- Added user-friendly labels and descriptions to all configuration options
+- Configuration UI now shows clear names instead of technical variable names
+- Each option includes helpful descriptions with defaults and valid ranges
+- Much easier to understand what each setting does
+
 ## [2.2.1] - 2025-11-05
 
 ### Fixed
