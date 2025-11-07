@@ -3,10 +3,13 @@
 ## [2.3.5] - 2025-11-07
 
 ### Fixed
-- **Ring Light Command Fix**
-  - Fixed ring light control to use correct MQTT command key "31" instead of "34"
-  - Corrected logic: 0 = unlock/ON, 1 = lock/OFF (was inverted)
-  - Ring light should now work properly with REHAU system
+- **Ring Light & Lock Command Fix**
+  - Fixed ring light to use correct referential 'ring_function' (index 34) instead of 'loc_activation'
+  - Fixed lock to use correct referential 'loc_activation' (index 31)
+  - Ring light: 1 = ON, 0 = OFF
+  - Lock: 1 = LOCKED, 0 = UNLOCKED
+  - Both now use dynamic referential lookup with fallback values
+  - Added full command data logging for debugging
 
 ## [2.3.4] - 2025-11-07
 

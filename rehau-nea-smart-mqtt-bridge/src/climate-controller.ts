@@ -1437,10 +1437,18 @@ class ClimateController {
     }
     
     try {
-      // Ring light: 0 = unlock/ON, 1 = lock/OFF
-      const ringLightValue = payload === 'ON' ? 0 : 1;
-      this.sendRehauCommand(foundState.installId, foundState.zoneNumber, foundState.channelNumber, { "31": ringLightValue });
+      // Get referentials to use proper key for ring light
+      const referentials = this.mqttBridge.getReferentials();
+      const ringFunctionKey = referentials?.['ring_function'] || '34'; // Fallback to "34" if referentials not loaded
+      
+      // Ring light: 1 = ON, 0 = OFF
+      const ringLightValue = payload === 'ON' ? 1 : 0;
+      const commandData = { [ringFunctionKey]: ringLightValue };
+      
+      this.sendRehauCommand(foundState.installId, foundState.zoneNumber, foundState.channelNumber, commandData);
+      
       logger.info(`Set zone ${foundState.zoneName} ring light to ${payload}`);
+      logger.info(`Full command data: ${JSON.stringify(commandData)}`);
     } catch (error) {
       logger.error(`Failed to handle ring light command for zone ${foundState.zoneName}:`, (error as Error).message);
     }
@@ -1465,9 +1473,18 @@ class ClimateController {
     }
     
     try {
+      // Get referentials to use proper key for lock
+      const referentials = this.mqttBridge.getReferentials();
+      const locActivationKey = referentials?.['loc_activation'] || '31'; // Fallback to "31" if referentials not loaded
+      
+      // Lock: 1 = LOCKED, 0 = UNLOCKED
       const lockValue = payload === 'LOCK' ? 1 : 0;
-      this.sendRehauCommand(foundState.installId, foundState.zoneNumber, foundState.channelNumber, { "lock": lockValue });
+      const commandData = { [locActivationKey]: lockValue };
+      
+      this.sendRehauCommand(foundState.installId, foundState.zoneNumber, foundState.channelNumber, commandData);
+      
       logger.info(`Set zone ${foundState.zoneName} lock to ${payload}`);
+      logger.info(`Full command data: ${JSON.stringify(commandData)}`);
     } catch (error) {
       logger.error(`Failed to handle lock command for zone ${foundState.zoneName}:`, (error as Error).message);
     }
@@ -1531,10 +1548,18 @@ class ClimateController {
         this.sendRehauCommand(installId, state.zoneNumber, state.channelNumber, { "2": tempF10 });
         logger.info(`Set zone ${state.zoneName} temperature to ${tempCelsius}°C (${tempF10})`);
       } else if (commandType === 'ring_light') {
-        // Ring light command: 0 = unlock/ON, 1 = lock/OFF
-        const ringLightValue = payload === 'ON' ? 0 : 1;
-        this.sendRehauCommand(installId, state.zoneNumber, state.channelNumber, { "31": ringLightValue });
+        // Get referentials to use proper key for ring light
+        const referentials = this.mqttBridge.getReferentials();
+        const ringFunctionKey = referentials?.['ring_function'] || '34'; // Fallback to "34" if referentials not loaded
+        
+        // Ring light command: 1 = ON, 0 = OFF
+        const ringLightValue = payload === 'ON' ? 1 : 0;
+        const commandData = { [ringFunctionKey]: ringLightValue };
+        
+        this.sendRehauCommand(installId, state.zoneNumber, state.channelNumber, commandData);
+        
         logger.info(`Set zone ${state.zoneName} ring light to ${payload}`);
+        logger.info(`Full command data: ${JSON.stringify(commandData)}`);
       }
     } catch (error) {
       logger.error(`Failed to handle command for zone ${state.zoneName}:`, (error as Error).message);
@@ -1553,6 +1578,7 @@ class ClimateController {
     const topic = `client/${installId}`;
     this.mqttBridge.publishToRehau(topic, message);
     logger.debug(`Sent REHAU command to zone ${zoneNumber}, channel ${channelNumber}:`, data);
+    logger.debug(`Full MQTT message: ${JSON.stringify(message)}`);
   }
 
   /**

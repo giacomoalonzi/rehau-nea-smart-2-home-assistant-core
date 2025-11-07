@@ -626,6 +626,12 @@ class RehauMQTTBridge {
             
             const referentials: ReferentialEntry[] = JSON.parse(decompressed);
             
+            // TEMPORARY: Dump referentials for debugging - REMOVE AFTER ANALYSIS
+            // logger.info('=== REFERENTIALS DUMP START ===');
+            // logger.info(JSON.stringify(referentials, null, 2));
+            // logger.info('=== REFERENTIALS DUMP END ===');
+            // END TEMPORARY DUMP
+            
             // Convert array to map for easy lookup
             const refMap: ReferentialsMap = {};
             referentials.forEach(ref => {
