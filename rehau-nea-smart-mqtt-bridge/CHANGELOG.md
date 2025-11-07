@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.3.4] - 2025-11-07
+
+### Changed
+- **Documentation Consolidation**
+  - Merged both README files into single comprehensive README in repository root
+  - Added disclaimer: Not affiliated with REHAU AG
+  - Removed duplicate documentation
+  - Improved navigation and structure
+
 ## [2.3.3] - 2025-11-07
 
 ### 🚨 BREAKING CHANGES - REQUIRES CLEAN REINSTALL
