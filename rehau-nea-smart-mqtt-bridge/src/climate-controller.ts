@@ -239,6 +239,70 @@ class ClimateController {
     
     // Print MQTT structure tree
     this.printMQTTStructure(install);
+    
+    // Dump internal memory map for debugging
+    this.dumpInternalMemoryMap(installId);
+  }
+
+  private dumpInternalMemoryMap(installId: string): void {
+    logger.info('\n');
+    logger.info('═══════════════════════════════════════════════════════════════');
+    logger.info('📊 Internal Memory Map (Command Routing)');
+    logger.info('═══════════════════════════════════════════════════════════════');
+    logger.info('');
+    
+    const zones = Array.from(this.installations.values())
+      .filter(z => z.installId === installId)
+      .sort((a, b) => a.zoneName.localeCompare(b.zoneName));
+    
+    logger.info(`Total Zones in Memory: ${zones.length}\n`);
+    
+    zones.forEach((zone, index) => {
+      logger.info(`Zone ${index + 1}: ${zone.zoneName}`);
+      logger.info(`├─ Zone ID:          ${zone.zoneId}`);
+      logger.info(`├─ Zone Number:      ${zone.zoneNumber}`);
+      logger.info(`├─ Channel Zone:     ${zone.channelZone}`);
+      logger.info(`├─ Controller:       ${zone.controllerNumber}`);
+      logger.info(`├─ Routing Key:      (${zone.channelZone}, ${zone.controllerNumber})`);
+      logger.info(`└─ Map Key:          ${zone.id}`);
+      logger.info('');
+    });
+    
+    // Check for routing conflicts
+    const routingMap = new Map<string, string[]>();
+    zones.forEach(zone => {
+      const key = `${zone.channelZone}_${zone.controllerNumber}`;
+      if (!routingMap.has(key)) {
+        routingMap.set(key, []);
+      }
+      routingMap.get(key)!.push(zone.zoneName);
+    });
+    
+    logger.info('Command Routing Table:');
+    logger.info('─'.repeat(63));
+    
+    let hasConflicts = false;
+    Array.from(routingMap.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .forEach(([key, zoneNames]) => {
+        const [channelZone, controller] = key.split('_');
+        if (zoneNames.length > 1) {
+          hasConflicts = true;
+          logger.warn(`❌ (${channelZone}, ${controller}) → ${zoneNames.join(', ')} [CONFLICT!]`);
+        } else {
+          logger.info(`✓  (${channelZone}, ${controller}) → ${zoneNames[0]}`);
+        }
+      });
+    
+    if (hasConflicts) {
+      logger.warn('\n⚠️  ROUTING CONFLICTS DETECTED - Commands may be misrouted!');
+    } else {
+      logger.info('\n✅ No routing conflicts - All zones have unique routing keys');
+    }
+    
+    logger.info('');
+    logger.info('═══════════════════════════════════════════════════════════════');
+    logger.info('');
   }
 
   private subscribeToZoneCommands(zoneId: string): void {
