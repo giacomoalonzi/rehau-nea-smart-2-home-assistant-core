@@ -261,9 +261,9 @@ class ClimateController {
       logger.info(`Zone ${index + 1}: ${zone.zoneName}`);
       logger.info(`├─ Zone ID:          ${zone.zoneId}`);
       logger.info(`├─ Zone Number:      ${zone.zoneNumber}`);
-      logger.info(`├─ Channel Zone:     ${zone.channelZone}`);
+      logger.info(`├─ Channel Zone:     ${zone.channelZone} (for commands)`);
       logger.info(`├─ Controller:       ${zone.controllerNumber}`);
-      logger.info(`├─ Routing Key:      (${zone.channelZone}, ${zone.controllerNumber})`);
+      logger.info(`├─ Routing Key:      (channelZone=${zone.channelZone}, controller=${zone.controllerNumber})`);
       logger.info(`└─ Map Key:          ${zone.id}`);
       logger.info('');
     });
@@ -295,9 +295,9 @@ class ClimateController {
       });
     
     if (hasConflicts) {
-      logger.warn('\n⚠️  ROUTING CONFLICTS DETECTED - Commands may be misrouted!');
+      logger.warn('⚠️  ROUTING CONFLICTS DETECTED - Commands may be misrouted!');
     } else {
-      logger.info('\n✅ No routing conflicts - All zones have unique routing keys');
+      logger.info('✅ No routing conflicts - All zones have unique routing keys');
     }
     
     // Reverse lookup table: Zone ID -> Routing
