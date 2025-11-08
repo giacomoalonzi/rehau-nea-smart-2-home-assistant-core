@@ -15,7 +15,8 @@ interface ExtendedZoneInfo {
   zoneId: string;
   zoneName: string;
   zoneNumber: number;
-  channelNumber?: number;
+  channelZone: number;
+  controllerNumber: number;
   groupName: string;
   installId: string;
   installName: string;
@@ -83,7 +84,8 @@ class ClimateController {
                 zoneId: zone.id,
                 zoneName: zone.name,
                 zoneNumber: zone.number,
-                channelNumber: zone.channels[0].controllerNumber ?? undefined,
+                channelZone: zone.channels[0].channelZone,
+                controllerNumber: zone.channels[0].controllerNumber ?? 0,
                 groupName: group.name,
                 installId: installId,
                 installName: install.name,
@@ -181,7 +183,8 @@ class ClimateController {
         zoneId: zone.zoneId,
         zoneName: zone.zoneName,
         zoneNumber: zone.zoneNumber,
-        channelNumber: zone.channelNumber,
+        channelZone: zone.channelZone,
+        controllerNumber: zone.controllerNumber,
         installName: zone.installName,
         installationMode: installationMode, // Store for MQTT updates
         currentTemperature: currentTemp,
@@ -653,6 +656,8 @@ class ClimateController {
                 zoneId: zone.id,
                 zoneName: zone.name,
                 zoneNumber: zone.number,
+                channelZone: zone.channels[0].channelZone,
+                controllerNumber: zone.channels[0].controllerNumber ?? 0,
                 groupName: group.name,
                 installId: installId,
                 installName: install.name,
@@ -677,7 +682,8 @@ class ClimateController {
                 zoneId: zone.id,
                 zoneName: zone.name,
                 zoneNumber: zone.number,
-                channelNumber: zone.channels[0].controllerNumber ?? undefined,
+                channelZone: zone.channels[0].channelZone,
+                controllerNumber: zone.channels[0].controllerNumber ?? 0,
                 groupName: group.name,
                 installId: installId,
                 installName: install.name,
@@ -738,6 +744,8 @@ class ClimateController {
                 zoneId: zone.id,
                 zoneName: zone.name,
                 zoneNumber: zone.number,
+                channelZone: zone.channels[0].channelZone,
+                controllerNumber: zone.channels[0].controllerNumber ?? 0,
                 groupName: group.name,
                 installId: installId,
                 installName: install.name,
@@ -1447,7 +1455,7 @@ class ClimateController {
       const ringLightValue = payload === 'ON' ? 1 : 0;
       const commandData = { [ringFunctionKey]: ringLightValue };
       
-      this.sendRehauCommand(foundState.installId, foundState.zoneNumber, foundState.channelNumber, commandData);
+      this.sendRehauCommand(foundState.installId, foundState.channelZone, foundState.controllerNumber, commandData);
       
       logger.info(`Set zone ${foundState.zoneName} ring light to ${payload}`);
       logger.info(`Full command data: ${JSON.stringify(commandData)}`);
@@ -1483,7 +1491,7 @@ class ClimateController {
       const lockValue = payload === 'LOCK' ? 1 : 0;
       const commandData = { [locActivationKey]: lockValue };
       
-      this.sendRehauCommand(foundState.installId, foundState.zoneNumber, foundState.channelNumber, commandData);
+      this.sendRehauCommand(foundState.installId, foundState.channelZone, foundState.controllerNumber, commandData);
       
       logger.info(`Set zone ${foundState.zoneName} lock to ${payload}`);
       logger.info(`Full command data: ${JSON.stringify(commandData)}`);
@@ -1521,11 +1529,11 @@ class ClimateController {
         // Mode command: off => mode_used=2, heat/cool => mode_used=0 (comfort)
         if (payload === 'off') {
           // Set mode_used to 2 (OFF)
-          this.sendRehauCommand(installId, state.zoneNumber, state.channelNumber, { "15": 2 });
+          this.sendRehauCommand(installId, state.channelZone, state.controllerNumber, { "15": 2 });
           logger.info(`Set zone ${state.zoneName} to OFF`);
         } else if (payload === 'heat' || payload === 'cool') {
           // Set mode_used to 0 (COMFORT) when turning on
-          this.sendRehauCommand(installId, state.zoneNumber, state.channelNumber, { "15": 0 });
+          this.sendRehauCommand(installId, state.channelZone, state.controllerNumber, { "15": 0 });
           logger.info(`Set zone ${state.zoneName} to ${payload.toUpperCase()} with COMFORT preset`);
         }
         
@@ -1539,7 +1547,7 @@ class ClimateController {
         const modeUsed = payload in presetMap ? presetMap[payload] : undefined;
         
         if (modeUsed !== undefined) {
-          this.sendRehauCommand(installId, state.zoneNumber, state.channelNumber, { "15": modeUsed });
+          this.sendRehauCommand(installId, state.channelZone, state.controllerNumber, { "15": modeUsed });
           logger.info(`Set zone ${state.zoneName} to preset ${payload} (mode_used=${modeUsed})`);
         }
         
@@ -1547,7 +1555,7 @@ class ClimateController {
         // Temperature command
         const tempCelsius = parseFloat(payload);
         const tempF10 = Math.round((tempCelsius * 10) * 1.8 + 320);
-        this.sendRehauCommand(installId, state.zoneNumber, state.channelNumber, { "2": tempF10 });
+        this.sendRehauCommand(installId, state.channelZone, state.controllerNumber, { "2": tempF10 });
         logger.info(`Set zone ${state.zoneName} temperature to ${tempCelsius}°C (${tempF10})`);
       } else if (commandType === 'ring_light') {
         // Get referentials to use proper key for ring light
@@ -1558,7 +1566,7 @@ class ClimateController {
         const ringLightValue = payload === 'ON' ? 1 : 0;
         const commandData = { [ringFunctionKey]: ringLightValue };
         
-        this.sendRehauCommand(installId, state.zoneNumber, state.channelNumber, commandData);
+        this.sendRehauCommand(installId, state.channelZone, state.controllerNumber, commandData);
         
         logger.info(`Set zone ${state.zoneName} ring light to ${payload}`);
         logger.info(`Full command data: ${JSON.stringify(commandData)}`);
@@ -1568,19 +1576,19 @@ class ClimateController {
     }
   }
 
-  private sendRehauCommand(installId: string, zoneNumber: number, channelNumber: number | undefined, data: RehauCommandData): void {
+  private sendRehauCommand(installId: string, channelZone: number, controllerNumber: number, data: RehauCommandData): void {
     // REQ_TH command format using numeric keys from referentials
     const message = {
       "11": "REQ_TH",  // type
       "12": data,      // data object
-      "36": zoneNumber,    // zone
-      "35": channelNumber || 0  // controller/channel (default to 0)
+      "36": channelZone,    // zone (channel zone number)
+      "35": controllerNumber  // controller number
     };
     
     const topic = `client/${installId}`;
     this.mqttBridge.publishToRehau(topic, message);
-    logger.info(`Command sent to zone ${zoneNumber}, channel ${channelNumber}:`, data);
-    logger.debug(`Sent REHAU command to zone ${zoneNumber}, channel ${channelNumber}:`, data);
+    logger.info(`Command sent to channelZone ${channelZone}, controller ${controllerNumber}:`, message);
+    logger.debug(`Sent REHAU command to channelZone ${channelZone}, controller ${controllerNumber}:`, data);
     logger.debug(`Full MQTT message: ${JSON.stringify(message)}`);
   }
 

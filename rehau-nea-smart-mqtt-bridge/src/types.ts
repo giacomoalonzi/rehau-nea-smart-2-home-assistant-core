@@ -138,8 +138,9 @@ export interface ClimateState {
   installId: string;
   zoneId: string;
   zoneName: string;
-  zoneNumber: number;
-  channelNumber?: number;
+  zoneNumber: number; // Keep for backward compatibility in logs
+  channelZone: number; // Actual channel zone number for REHAU commands
+  controllerNumber: number; // Controller number for REHAU commands
   installName: string;
   installationMode: 'heat' | 'cool';
   currentTemperature: number | null;
