@@ -1,5 +1,65 @@
 # Changelog
 
+## [2.6.0] - 2025-11-08
+
+### 🐛 Fixed - CRITICAL: Slave Unit Command Routing
+
+**This version fixes a critical bug where commands to slave unit zones (zones on secondary controllers) were being sent to the wrong physical zones.**
+
+#### The Problem
+Commands sent to **Zone_8 (Bedroom 5)** were being routed to **Zone_1 (Landing)** instead, causing the wrong zone to respond.
+
+**Example from logs:**
+```
+Command: temperature = 17.0 for zone 6618fa32839d609d2e344339 (Zone_8)
+Command sent to channelZone 0, controller 0  ← WRONG! Should be controller 2
+MQTT Update received from Zone_1  ← Wrong zone responded!
+```
+
+#### Root Cause
+The REHAU API returns `controllerNumber` as a **STRING** (`"0"`, `"1"`, `"2"`), but our parser only checked for **NUMBER** type:
+
+```typescript
+// Before (WRONG):
+controllerNumber: typeof channel.controllerNumber === 'number' ? channel.controllerNumber : null
+// Result: Always null → defaults to 0 via ?? operator
+```
+
+**Impact:** ALL zones were stored with `controllerNumber=0`, causing zones on controllers 1 and 2 to route commands to controller 0 zones.
+
+#### The Fix
+Parse `controllerNumber` as both string and number:
+
+```typescript
+// After (CORRECT):
+if (typeof channel.controllerNumber === 'number') {
+  controllerNumber = channel.controllerNumber;
+} else if (typeof channel.controllerNumber === 'string') {
+  controllerNumber = parseInt(channel.controllerNumber, 10);
+}
+```
+
+#### Verified Routing
+**Correct routing after fix:**
+- `channelZone=0, controller=0` → Landing (Upstairs)
+- `channelZone=0, controller=1` → Kitchen (Downstairs)
+- `channelZone=0, controller=2` → Bedroom 5 (Zone_8) ✓
+
+**Note:** Multiple zones can have `channelZone=0` as long as they're on different controllers. This is the correct REHAU architecture for multi-controller installations.
+
+#### Testing
+Created comprehensive test scripts to verify all lookup patterns:
+1. **HA Commands** → Zone lookup by `zoneId` → Command routing
+2. **REHAU MQTT** → Zone lookup by `channelId` → State updates
+3. **REHAU HTTP** → Zone lookup by `zoneId` → State updates
+
+All tests pass with perfect bijection (one-to-one mapping).
+
+### Technical Details
+- Updated `installation-data-parser-v2.ts` to handle string `controllerNumber`
+- Added debug logging for zone lookups (enable with `LOG_LEVEL=debug`)
+- Removed incorrect warnings about `channelZone=0` (it's valid on different controllers)
+
 ## [2.5.0] - 2025-11-08
 
 ### 🐛 Fixed - CRITICAL: Zone Association and Setpoint Handling
