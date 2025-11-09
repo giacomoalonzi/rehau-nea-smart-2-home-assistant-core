@@ -1432,11 +1432,11 @@ class ClimateController {
     logger.info(`   Group: ${groupName}`);
     logger.info(`   Zone: ${state.zoneName}`);
     logger.info(`   Entity: target_temperature`);
-    logger.info(`   Value: "" (empty - zone is OFF)`);
+    logger.info(`   Value: "none" (zone is OFF)`);
     
     this.mqttBridge.publishToHomeAssistant(
       topic,
-      '',
+      'none',
       { retain: true }
     );
   }
