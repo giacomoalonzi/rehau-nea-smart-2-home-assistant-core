@@ -1,5 +1,22 @@
 # Changelog
 
+## [2.7.2] - 2025-11-17
+
+### 📚 Documentation
+- **Complete Docker Compose Setup Guide** - Added comprehensive step-by-step guide for setting up MQTT broker, REHAU bridge, and Home Assistant Core together in a single `docker-compose.yaml` file
+  - Complete `docker-compose.yaml` example with all three services (Mosquitto, REHAU bridge, Home Assistant Core)
+  - Mosquitto configuration file template with proper healthcheck setup
+  - Environment variables template (`.env` file) with all required and optional settings
+  - Step-by-step instructions from initial setup to entity discovery
+  - Directory structure overview and useful Docker Compose commands
+  - Troubleshooting section including Mosquitto healthcheck fix
+  - Guide added as "Option A" (recommended for new installations) in README.md
+
+### 🛠 Fixes
+- **Mosquitto Healthcheck** - Fixed healthcheck configuration in Docker Compose setup to use `pgrep mosquitto` instead of MQTT subscription test, preventing "unhealthy" container status
+
+---
+
 ## [2.7.1] - 2025-11-11
 
 ### 🚀 Improvements
